@@ -1,0 +1,144 @@
+{
+	"name": "Demo5 - IF Condition",
+	"properties": {
+		"activities": [
+			{
+				"name": "Get MetaData Last Modified Date",
+				"type": "GetMetadata",
+				"dependsOn": [],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"dataset": {
+						"referenceName": "az_adls_employee_emp_tq",
+						"type": "DatasetReference"
+					},
+					"fieldList": [
+						"lastModified",
+						"size",
+						"itemName"
+					],
+					"storeSettings": {
+						"type": "AzureBlobFSReadSettings",
+						"recursive": true,
+						"enablePartitionDiscovery": false
+					},
+					"formatSettings": {
+						"type": "DelimitedTextReadSettings"
+					}
+				}
+			},
+			{
+				"name": "Lookup Last Execution Date",
+				"type": "Lookup",
+				"dependsOn": [
+					{
+						"activity": "Get MetaData Last Modified Date",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"source": {
+						"type": "AzureSqlSource",
+						"sqlReaderStoredProcedureName": "[dbo].[usp_LastLoadDate]",
+						"storedProcedureParameters": {
+							"Name": {
+								"type": "String",
+								"value": {
+									"value": "@activity('Get MetaData Last Modified Date').output.itemName",
+									"type": "Expression"
+								}
+							}
+						},
+						"queryTimeout": "02:00:00",
+						"partitionOption": "None"
+					},
+					"dataset": {
+						"referenceName": "az_sqldb_debo_emp",
+						"type": "DatasetReference"
+					}
+				}
+			},
+			{
+				"name": "IF Condition Test",
+				"type": "IfCondition",
+				"dependsOn": [
+					{
+						"activity": "Lookup Last Execution Date",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"userProperties": [],
+				"typeProperties": {
+					"expression": {
+						"value": "@greaterOrEquals(\naddHours(\nformatDateTime(\nactivity('Get MetaData Last Modified Date').output.lastModified,'o'),-6)\n, activity('Lookup Last Execution Date').output.firstRow.ExecutionDate)",
+						"type": "Expression"
+					},
+					"ifFalseActivities": [
+						{
+							"name": "False",
+							"type": "Wait",
+							"dependsOn": [],
+							"userProperties": [],
+							"typeProperties": {
+								"waitTimeInSeconds": 1
+							}
+						}
+					],
+					"ifTrueActivities": [
+						{
+							"name": "usp_UpdateExecutionDate",
+							"type": "SqlServerStoredProcedure",
+							"dependsOn": [],
+							"policy": {
+								"timeout": "0.12:00:00",
+								"retry": 0,
+								"retryIntervalInSeconds": 30,
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"storedProcedureName": "[dbo].[usp_UpdateLastExecutionDate]",
+								"storedProcedureParameters": {
+									"ExecutionDate": {
+										"value": {
+											"value": "@convertFromUtc(pipeline().TriggerTime, 'Mountain Standard Time')",
+											"type": "Expression"
+										},
+										"type": "Datetime"
+									}
+								}
+							},
+							"linkedServiceName": {
+								"referenceName": "az_sql_dftutorial_linked",
+								"type": "LinkedServiceReference"
+							}
+						}
+					]
+				}
+			}
+		],
+		"annotations": [],
+		"lastPublishTime": "2023-06-01T15:31:19Z"
+	},
+	"type": "Microsoft.DataFactory/factories/pipelines"
+}

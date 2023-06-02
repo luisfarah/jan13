@@ -1,0 +1,83 @@
+{
+	"name": "Demo4 - LookUp",
+	"properties": {
+		"activities": [
+			{
+				"name": "Get Last Modified Date",
+				"type": "GetMetadata",
+				"dependsOn": [],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"dataset": {
+						"referenceName": "az_adls_employee_emp_tq",
+						"type": "DatasetReference"
+					},
+					"fieldList": [
+						"lastModified",
+						"size",
+						"itemName"
+					],
+					"storeSettings": {
+						"type": "AzureBlobFSReadSettings",
+						"recursive": true,
+						"enablePartitionDiscovery": false
+					},
+					"formatSettings": {
+						"type": "DelimitedTextReadSettings"
+					}
+				}
+			},
+			{
+				"name": "LookUp Last Execution Date",
+				"type": "Lookup",
+				"dependsOn": [
+					{
+						"activity": "Get Last Modified Date",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"source": {
+						"type": "AzureSqlSource",
+						"sqlReaderStoredProcedureName": "[dbo].[usp_LastLoadDate]",
+						"storedProcedureParameters": {
+							"Name": {
+								"type": "String",
+								"value": {
+									"value": "@activity('Get Last Modified Date').output.itemName",
+									"type": "Expression"
+								}
+							}
+						},
+						"queryTimeout": "02:00:00",
+						"partitionOption": "None"
+					},
+					"dataset": {
+						"referenceName": "az_sqldb_debo_emp",
+						"type": "DatasetReference"
+					}
+				}
+			}
+		],
+		"annotations": [],
+		"lastPublishTime": "2023-06-01T02:25:08Z"
+	},
+	"type": "Microsoft.DataFactory/factories/pipelines"
+}

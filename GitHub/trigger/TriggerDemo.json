@@ -1,0 +1,36 @@
+{
+	"name": "TriggerDemo",
+	"properties": {
+		"annotations": [],
+		"runtimeState": "Started",
+		"pipelines": [
+			{
+				"pipelineReference": {
+					"referenceName": "Demo6 - Execute Dataflow",
+					"type": "PipelineReference"
+				}
+			}
+		],
+		"type": "ScheduleTrigger",
+		"typeProperties": {
+			"recurrence": {
+				"frequency": "Week",
+				"interval": 1,
+				"startTime": "2023-06-01T16:49:00",
+				"timeZone": "Mountain Standard Time",
+				"schedule": {
+					"minutes": [
+						0
+					],
+					"hours": [
+						19
+					],
+					"weekDays": [
+						"Tuesday",
+						"Thursday"
+					]
+				}
+			}
+		}
+	}
+}

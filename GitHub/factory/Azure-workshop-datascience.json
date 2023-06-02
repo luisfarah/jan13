@@ -1,0 +1,9 @@
+{
+	"name": "Azure-workshop-datascience",
+	"location": "eastus2",
+	"identity": {
+		"type": "SystemAssigned",
+		"principalId": "6e9af77d-072f-4eed-b753-979770fa4ce4",
+		"tenantId": "e4c87d5b-c7eb-4b25-a21f-6b054c4eaafc"
+	}
+}
